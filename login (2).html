@@ -1,4 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="login.css">
+    <title>Login Mario</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif+Display&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
 
 /*pasta css do projeto login
 */
@@ -23,7 +32,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-image: url('img/background.jpeg');
+    background-image: url('https://t.ctcdn.com.br/2izS7Ky-BYBtmGVEAePnk449sBg=/1200x675/smart/i282364.png');
     background-size: cover;
     background-position: center;
 
@@ -104,7 +113,7 @@ padding segue os mesmos princípios
 button {
     width: 100%;
     padding: 15px;
-   background-color: #4A148C;
+   background-color: #148c38;
    color: rgba(255, 255, 255, 0.932);
    border: none;
    border-radius: 40px;
@@ -115,7 +124,7 @@ button {
    box-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
 }
 button:hover {
-   background-color: #6a1b9a;
+   background-color: #4A148C;
    transition: 2s;
 }
 .cadastro a {
@@ -135,3 +144,36 @@ button:hover {
    margin:auto
   
 }
+
+    </style>
+</head>
+<body>
+   <main class="login-container">
+    <form>
+        <h1>Meu Login</h1>
+        <div class="input-container">
+            <input placeholder="Usuário" type="e-mail">
+            <i class='bx bxs-user'></i>
+        </div>
+         <div class="input-container">
+            <input placeholder="Senha" type="password">
+            <i class='bx bxs-lock-alt'></i>
+        
+        </div>
+        <div class="senha">
+            <label>
+                <input type="checkbox">
+               Lembrar senha
+            </label>
+           <a href="#">Esqueci a senha</a>
+        </div>
+
+        <button type="submit" class="login">Login</button>
+        <div class="cadastro">
+            <p>Não tem uma conta? <a href="#">Cadastre-se</a></p>
+        </div>
+    </form>
+   </main>
+
+</body>
+</html>

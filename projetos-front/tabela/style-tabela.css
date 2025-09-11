@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Libertinus+Serif+Display&family=Mohave:ital,wght@0,300..700;1,300..700&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Pixelify+Sans:wght@400..700&family=Raleway:wght@300&display=swap');
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+table {
+    border: none;
+    margin: none;
+    border-top: none;
+    position: relative;
+    box-sizing: border-box;
+    padding: none;
+    font-optical-sizing: auto;
+    font-weight: bold;
+    font-size: 20px;
+    position: relative;
+    font-family: "Pixelify Sans", sans-serif;
+}
+
+caption {
+    color: aliceblue;
+    font-size: 45px;
+    color: rgb(81, 22, 99);
+    text-align: center; 
+    font-family: "Pixelify Sans", sans-serif;
+  
+}
+
+td,
+th {
+    display: table-cell;
+    margin: 20px;
+    padding: 10px 0;
+    border: 1px solid rgba(141, 0, 0, 0.719);
+    padding: 8px;
+    text-align: left;
+    width: 400px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 2px solid rgba(141, 0, 0, 0.719);
+}
+
+th {
+    background: rgb(81, 22, 99);
+    color:aliceblue;
+    font-weight: bold;
+    font-size: 25px;
+    font-family: "Pixelify Sans", sans-serif;
+    text-align: center;
+}
+
+td {
+    font-weight: bold;
+    font-size: 22px;
+    color: rgb(88, 12, 12);
+    text-align: center;
+    border: 0.8px solid rgba(141, 0, 0, 0.719);
+    font-family: "Pixelify Sans", sans-serif;
+}
+tr:nth-child(even) {
+    background-color: rgb(240, 218, 240);
+}
+td:hover {
+    background-color: rgba(64, 14, 110, 0.842);
+    transition: 0.3s;
+    color: aliceblue;
+}

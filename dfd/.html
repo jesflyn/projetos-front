@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Analyzer CSV • pandas + PyScript</title>
+  <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+  <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+  <style>
+    :root { --card-bg: #0f172a; --card-fg: #e2e8f0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; margin: 0; background:#0b1020; color:#e5e7eb; }
+    header { padding: 24px 16px; border-bottom: 1px solid #1f2937; position: sticky; top: 0; background: rgba(11,16,32,.85); backdrop-filter: blur(6px); }
+    h1 { font-size: clamp(1.1rem, 1.2rem + 1vw, 1.8rem); margin: 0 0 6px; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 18px 16px 60px; }
+    .u-row { display:grid; gap:14px; grid-template-columns: 1fr; }
+    @media (min-width: 900px){ .u-row{ grid-template-columns: 360px 1fr; } }
+    .card { background: var(--card-bg); color:var(--card-fg); border:1px solid #1f2937; border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .muted { color:#94a3b8; font-size:.95rem }
+    label { display:block; font-weight:600; margin-bottom:8px }
+    input[type="file"]{ width:100%; padding: 12px; border: 1px dashed #334155; border-radius: 12px; background: #0b1325; color:#e5e7eb }
+    .grid { display:grid; gap:14px }
+    .grid-2 { grid-template-columns: 1fr; }
+    @media (min-width: 900px){ .grid-2{ grid-template-columns: 1fr 1fr; } }
+    table { width:100%; border-collapse: collapse; font-size: .95rem; }
+    th, td { border: 1px solid #243244; padding: 8px 10px; text-align: left; }
+    th { background:#111a31 }
+    .kpi { display:flex; gap:12px; align-items:center; padding:12px; border:1px solid #1f2937; border-radius:12px; background:#0b1325 }
+    .kpi span { font-size: 1.2rem; font-weight:700 }
+    .footer { margin-top:10px; font-size:.9rem; color:#94a3b8 }
+    .hidden { display:none }
+    .btn { display:inline-block; padding:10px 14px; border-radius:12px; border:1px solid #334155; background:#0b1325; color:#e5e7eb; cursor:pointer }
+    .btn:disabled{ opacity:.6; cursor:not-allowed }
+    .section-title{ margin: 8px 0 10px; font-size:1.1rem }
+    .small{ font-size:.9rem }
+  </style>
+
+  <py-config>
+    packages = [
+      "pandas"
+    ]
+  </py-config>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Leitor & Analisador de CSV (pandas no navegador)</h1>
+      <div class="muted">Envie um arquivo .csv para visualizar o <em>head</em>, tipos, valores ausentes e estatísticas básicas — tudo rodando com pandas via PyScript.</div>
+    </div>
+  </header>
+
+  <main class="wrap u-row">
+    <section class="card">
+      <label for="csvfile">Arquivo CSV</label>
+      <input id="csvfile" type="file" accept=".csv,text/csv" />
+      <div class="footer small">Dica: separador padrão é vírgula. Se seu arquivo usa ponto-e-vírgula, altere o campo "Separador" abaixo antes de enviar.</div>
+      <div style="height:12px"></div>
+      <div class="grid grid-2">
+        <div>
+          <label for="sep">Separador</label>
+          <input id="sep" type="text" value="," placeholder="," style="width:100%; padding:10px; border-radius:10px; border:1px solid #334155; background:#0b1325; color:#e5e7eb" />
+        </div>
+        <div>
+          <label for="encoding">Encoding</label>
+          <input id="encoding" type="text" value="utf-8" placeholder="utf-8, latin-1, cp1252…" style="width:100%; padding:10px; border-radius:10px; border:1px solid #334155; background:#0b1325; color:#e5e7eb" />
+        </div>
+      </div>
+      <div style="height:12px"></div>
+      <button id="btn-analisar" class="btn" disabled>Analisar CSV</button>
+      <button id="btn-baixar" class="btn" disabled>Baixar amostra (head.csv)</button>
+      <div style="height:12px"></div>
+      <div class="kpi"><div>Dimensões:</div> <span id="shape">—</span></div>
+    </section>
+
+    <section class="card">
+      <div class="grid">
+        <div>
+          <h2 class="section-title">Prévia (5 primeiras linhas)</h2>
+          <div id="preview"></div>
+        </div>
+        <div class="grid grid-2">
+          <div>
+            <h2 class="section-title">Tipos de dados</h2>
+            <div id="dtypes"></div>
+          </div>
+          <div>
+            <h2 class="section-title">Valores ausentes por coluna</h2>
+            <div id="missing"></div>
+          </div>
+        </div>
+        <div>
+          <h2 class="section-title">Estatísticas (numéricas e categóricas)</h2>
+          <div id="stats"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <py-script>
+from js import document, URL, Blob
+from pyodide.ffi import create_proxy
+import pandas as pd
+import io
+
+_df = None  # armazenará o último DataFrame carregado
+
+# Utilitários para escrever HTML de forma segura
+from pyscript import display
+
+def clear_targets():
+    for tid in ["preview", "dtypes", "missing", "stats"]:
+        document.getElementById(tid).innerHTML = ""
+    document.getElementById("shape").innerText = "—"
+
+async def on_file_change(event):
+    # Habilita o botão de analisar quando um arquivo for selecionado
+    btn = document.getElementById("btn-analisar")
+    btn.disabled = False
+
+async def analyze_click(event):
+    global _df
+    file_input = document.getElementById("csvfile")
+    if not file_input.files.length:
+        return
+
+    file = file_input.files.item(0)
+    sep = document.getElementById("sep").value or ","
+    encoding = document.getElementById("encoding").value or "utf-8"
+
+    # Lê conteúdo do arquivo (como texto) e carrega no pandas
+    text = await file.text()
+    try:
+        _df = pd.read_csv(io.StringIO(text), sep=sep, encoding=encoding)
+    except Exception:
+        # Alguns navegadores podem fornecer texto já decodificado; tente sem 'encoding'
+        _df = pd.read_csv(io.StringIO(text), sep=sep)
+
+    clear_targets()
+    # Exibe dimensões
+    document.getElementById("shape").innerText = f"{_df.shape[0]} linhas × {_df.shape[1]} colunas"
+
+    # Prévia
+    display(_df.head(), target="preview")
+
+    # dtypes
+    dtypes = _df.dtypes.to_frame("dtype").reset_index(names=["coluna"]) 
+    display(dtypes, target="dtypes")
+
+    # missing por coluna
+    missing = _df.isna().sum().to_frame("faltantes").reset_index(names=["coluna"]) 
+    display(missing, target="missing")
+
+    # estatísticas
+    stats = _df.describe(include="all", datetime_is_numeric=True)
+    display(stats, target="stats")
+
+    # Habilita baixar head
+    document.getElementById("btn-baixar").disabled = False
+
+async def download_head(event):
+    if _df is None:
+        return
+    head_csv = _df.head().to_csv(index=False)
+    blob = Blob.new([head_csv], {"type": "text/csv"})
+    url = URL.createObjectURL(blob)
+    link = document.createElement("a")
+    link.href = url
+    link.download = "head.csv"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+# liga eventos
+input_el = document.getElementById("csvfile")
+input_el.addEventListener("change", create_proxy(on_file_change))
+
+document.getElementById("btn-analisar").addEventListener("click", create_proxy(analyze_click))
+document.getElementById("btn-baixar").addEventListener("click", create_proxy(download_head))
+  </py-script>
+</body>
+</html>
